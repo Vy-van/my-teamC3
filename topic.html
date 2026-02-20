@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Topic</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="game-container center">
+    <h2>トピックを選んでください</h2>
+
+    <!-- ※このプロジェクトにある txt ファイル名に合わせています -->
+    <button onclick="selectTopic('food')">食べ物</button>
+    <button onclick="selectTopic('animal')">動物</button>
+    <button onclick="selectTopic('place')">場所</button>
+    <button onclick="selectTopic('furniture')">家具</button>
+    <button onclick="selectTopic('hobbies')">趣味</button>
+
+    <div style="margin-top: 20px;">
+        <button onclick="location.href='TeamC3.html'"style="background:red;color:white;">戻る</button>
+    </div>
+</div>
+
+<script>
+function selectTopic(topic) {
+    // 選んだ主題を保存してゲームへ
+    localStorage.setItem("topic", topic);
+    localStorage.removeItem("retry");
+// 前回結果をクリア（任意）
+    localStorage.removeItem("correct");
+    localStorage.removeItem("miss");
+    localStorage.removeItem("missList");
+
+    location.href = "game.html";
+}
+</script>
+
+  <script src="bgm.js" defer></script>
+</body>
+</html>
