@@ -23,10 +23,10 @@ body {
     font-family: "Segoe UI", Arial, sans-serif;
     color: #532323;
 
-    background-color: #fee582; /* linen ngà */
+    background-color: #fee582;
 
     background-image:
-        background-image: url("bgr.png"),
+        url("bgr.png"),
         repeating-linear-gradient(
             45deg,
             rgba(0,0,0,0.015),
@@ -42,13 +42,8 @@ body {
             transparent 4px
         );
 
-    /* 👇 ĐÂY LÀ CHỖ CHỈNH SIZE ẢNH */
-    background-size:
-        90% auto,   /* ảnh bg.png nhỏ hơn */
-        auto,
-        auto;
-
-    background-repeat: repeat, repeat, repeat;
+    background-size: 90% auto, auto, auto;
+    background-repeat: no-repeat, repeat, repeat;
     background-position: center;
 }
 
