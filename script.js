@@ -121,7 +121,7 @@ startBtn.onclick = startGame;
 
 // 単語
 async function loadWords() {
-  const path = `category/${topic}(${mode}).txt`;
+  const path = `${topic}(${mode}).txt`;
   const res = await fetch(path, { cache: "no-store" });
   if (!res.ok) throw new Error();
   const text = await res.text();
