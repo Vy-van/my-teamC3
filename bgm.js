@@ -1,5 +1,5 @@
 (() => {
-  const AUDIO_SRC = "sound/bgm.mp3";
+  const AUDIO_SRC = "bgm.mp3";
   const KEY_ENABLED = "bgmEnabled"; // "1" or "0"
   const KEY_TIME = "bgmTime";       // seconds (string)
 
