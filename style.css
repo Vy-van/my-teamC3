@@ -23,10 +23,10 @@ body {
     font-family: "Segoe UI", Arial, sans-serif;
     color: #532323;
 
-    background-color: #fee582;
+    background-color: #fee582; /* linen ngà */
 
     background-image:
-        url("bgr.png"),
+        url("image/bgr.png"),
         repeating-linear-gradient(
             45deg,
             rgba(0,0,0,0.015),
@@ -42,8 +42,13 @@ body {
             transparent 4px
         );
 
-    background-size: 90% auto, auto, auto;
-    background-repeat: no-repeat, repeat, repeat;
+    /* 👇 ĐÂY LÀ CHỖ CHỈNH SIZE ẢNH */
+    background-size:
+        90% auto,   /* ảnh bg.png nhỏ hơn */
+        auto,
+        auto;
+
+    background-repeat: repeat, repeat, repeat;
     background-position: center;
 }
 
@@ -57,27 +62,24 @@ body {
 }
 /* CONTAINER */
 .game-container {
-    width: 1000px;
-    padding: 30px;
-    border-radius: 25px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-    background-color: rgba(254, 237, 169, 0.7); /* 👈 trong suốt nhẹ */
-
-    backdrop-filter: blur(3px);
+    width: 95%;
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+    background-color: rgba(254, 237, 169, 0.9);
+    border-radius: 20px;
+    box-sizing: border-box;
 }
 
 /* SCREEN */
 .screen {
-    padding-top: 10px;
     width: 100%;
-    height: 80vh;
+    min-height: 60vh; /* Dùng min-height thay vì height cố định */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    text-align: center;
 }
-
 /* BUTTON */
 button {
     background: var(--green);
@@ -112,19 +114,37 @@ button.active {
 }
 
 #gameScreen {
-    height: 550px;
+    height: auto;
+    min-height: 500px;
     display: flex;
-    flex-direction: row;
-    justify-content: center;      
-    align-items: center;         
-    gap: 30px;
+    flex-direction: row; /* PC nằm ngang */
+    gap: 20px;
+    align-items: stretch;
+}
+
+/* Media Query cho điện thoại */
+@media (max-width: 768px) {
+    #gameScreen {
+        flex-direction: column; /* Chuyển thành dọc */
+    }
+    
+    .falling-area {
+        height: 350px; /* Giảm chiều cao vùng rơi để đủ chỗ cho bàn phím */
+    }
+
+    .side-panel {
+        width: 100%;
+    }
+    
+    .welcome-text {
+        font-size: 28px;
+    }
 }
 
 /* FALLING AREA */
 .falling-area {
     flex: 3;
-    width: 100%;
-    height: 100%;
+    height: 500px; /* Chiều cao cố định vùng chơi */
     background: var(--blue);
     border: 4px solid var(--yellow);
     border-radius: 15px;
@@ -138,13 +158,14 @@ button.active {
 /* FALLING CHAR */
 .falling-char {
     position: absolute;
-    background: var(--blue);
-    color: #1b1b1b;
-    padding: 10px 18px;
-    font-size: 30px;
-    border-radius: 12px;
-    border: 3px solid var(--green);
     white-space: nowrap;
+    padding: 8px 15px;
+    background: white;
+    border: 2px solid var(--green);
+    border-radius: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    z-index: 10;
 }
 
 ul {
@@ -165,14 +186,20 @@ li {
 .side-panel {
     flex: 1;
     height: 100%;
-    margin: auto;
-    padding: 30px;
+    padding: 20px;
     display: flex;
-    flex-direction:column;
-    align-items:center;
-    gap: 12px;
+    flex-direction: column;
+    align-items: center;    /* Căn giữa tất cả thành phần theo chiều ngang của cột */
+    justify-content: center; /* Căn giữa tất cả thành phần theo chiều dọc của cột */
+    gap: 15px;              /* Khoảng cách đều giữa các phần tử */
 }
 
+/* Đảm bảo các nút có độ rộng bằng nhau và căn giữa chữ */
+.side-panel button {
+    width: 100%;            /* Cho nút rộng bằng ô Input */
+    max-width: 150px;       /* Giới hạn độ rộng tối đa để nút không quá to */
+    margin: 0;              /* Xóa margin thừa để căn giữa chuẩn hơn */
+}
 .info-box {
     background: var(--beige);
     border: 3px solid var(--blue);
@@ -185,10 +212,11 @@ li {
 #inputBox {
     width: 100%;
     padding: 12px;
-    font-size: 18px;
+    font-size: 16px; /* Font 16px là tiêu chuẩn để mobile không tự zoom màn hình */
     border-radius: 12px;
     border: 3px solid var(--blue);
     outline: none;
+    box-sizing: border-box;
 }
 
 #inputBox:focus {
@@ -196,32 +224,29 @@ li {
 }
 
 /* 結果画面：ミス入力リストをボックス表示 */
-.miss-box{
-  width: 80%;
-  max-width: 700px;
-  min-height: 90px;
-  padding: 14px;
-  border: 3px solid var(--blue);
-  border-radius: 16px;
-  background: #fff;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
+.miss-box {
+    display: flex;
+    flex-wrap: wrap; /* Tự động xuống hàng khi đầy */
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
 }
 
-.chip{
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: 2px solid var(--green);
-  background: var(--beige);
-  font-size: 18px;
+.chip {
+    padding: 8px 18px;
+    background-color: #ffe5e5; /* Màu đỏ nhạt */
+    color: #d63031;            /* Chữ màu đỏ đậm */
+    border: 2px solid #ff8080;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 18px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
 }
 
-.chip.none{
-  border-color: var(--red);
+.chip.none {
+    background-color: #e3f9e5;
+    color: #27ae60;
+    border-color: #2ecc71;
 }
 #missWords {
     display: flex;
@@ -352,7 +377,14 @@ button:nth-child(5) { animation-delay: 0.5s; }
     }
 
 }
- 
+@media (max-width: 600px) {
+  body {
+    font-size: 14px;
+  }
+  .game-container {
+    width: 95%; 
+  }
+}
 
 /* BGM Toggle Button (Top Right) */
 .bgm-toggle{
