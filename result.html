@@ -1,63 +1,68 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>Result</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Result</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-<div class="game-container screen">
+  <div class="game-container screen">
+    <h2>結果</h2>
 
-  <h2>結果</h2>
+    <p>正解数: <span id="correct">0</span></p>
+    <p>ミス数: <span id="miss">0</span></p>
 
-  <p>正解数: <span id="correct"></span></p>
-  <p>ミス数: <span id="miss"></span></p>
+    <h3>間違った入力</h3>
 
-  <h3>間違った入力</h3>
+    <div id="missBox" class="miss-box"></div>
 
-  <!-- ボックス表示 -->
-  <div id="missBox" class="miss-box"></div>
-  <div id="missWords"></div>
+    <div style="margin-top: 20px;">
+      <button onclick="location.href='topic.html'" style="background:red;color:white;">トピックへ</button>
+      <button id="retryBtn" class="btn retry-btn">やり直し</button>
+    </div>
+  </div>
 
-  <button onclick="location.href='topic.html'"style="background:red;color:white;">トピックへ</button>
-  <button id="retryBtn" class="btn retry-btn">やり直し</button>
+  <script>
+    // 1. Khi trang tải xong, lấy dữ liệu từ LocalStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      // Hiển thị số lượng
+      document.getElementById("correct").textContent = localStorage.getItem("correct") || "0";
+      document.getElementById("miss").textContent = localStorage.getItem("miss") || "0";
 
-</div>
+      // 2. Lấy danh sách từ bị Miss
+      const missListRaw = localStorage.getItem("missList");
+      const list = JSON.parse(missListRaw) || [];
+      const box = document.getElementById("missBox");
 
+      if (box) {
+        if (list.length === 0) {
+          // Nếu không sai từ nào
+          const div = document.createElement("div");
+          div.className = "chip none";
+          div.textContent = "なし";
+          box.appendChild(div);
+        } else {
+          // Vẽ từng từ sai thành một "Chip"
+          list.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "chip";
+            div.textContent = item;
+            box.appendChild(div);
+          });
+        }
+      }
 
-<script>
-  document.getElementById("correct").textContent =
-    localStorage.getItem("correct") || "0";
-
-  document.getElementById("miss").textContent =
-    localStorage.getItem("miss") || "0";
-
-  // ★ミス入力リスト（missList）を表示
-  const list = JSON.parse(localStorage.getItem("missList")) || [];
-  const box = document.getElementById("missBox");
-
-  if (list.length === 0) {
-    const div = document.createElement("div");
-    div.className = "chip none";
-    div.textContent = "なし";
-
-    box.appendChild(div);
-  } else {
-    list.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "chip";
-      div.textContent = item;
-      box.appendChild(div);
+      // 3. Xử lý nút Chơi lại (Retry)
+      const retryBtn = document.getElementById("retryBtn");
+      if (retryBtn) {
+        retryBtn.addEventListener("click", () => {
+          localStorage.setItem("retry", "1");
+          // Đảm bảo file game của bạn tên là game.html hoặc index.html
+          location.href = "game.html"; 
+        });
+      }
     });
-  }
-
-  // やり直し：直前の Topic + 文字タイプ(mode) のまま再スタート
-  document.getElementById("retryBtn").addEventListener("click", () => {
-    localStorage.setItem("retry", "1");
-    location.href = "game.html";
-  });
-</script>
-
+  </script>
 </body>
 </html>
