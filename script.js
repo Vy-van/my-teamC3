@@ -1,239 +1,222 @@
-
 const mojiScreen = document.getElementById("mojiScreen");
 const gameScreen = document.getElementById("gameScreen");
-
 const hiraBtn = document.getElementById("hiraBtn");
 const kataBtn = document.getElementById("kataBtn");
 const startBtn = document.getElementById("startBtn");
 const finishBtn = document.getElementById("finishBtn");
-
 const inputBox = document.getElementById("inputBox");
 const fallingArea = document.getElementById("fallingArea");
-
 const correctEl = document.getElementById("correct");
 const missEl = document.getElementById("miss");
 const timeLeftEl = document.getElementById("timeLeft");
 const topicLabel = document.getElementById("topicLabel");
-const durationSelect = document.getElementById("durationSelect");
 
-// 状態
-let mode = localStorage.getItem("mode") || "hira";
+// Trạng thái game
+let mode = localStorage.getItem("mode") || ""; // Lấy lại mode cũ nếu có (hỗ trợ Yarinaoshi)
 let words = [];
-
+let shuffledWords = []; // Dùng để chống lặp
 let correctCount = 0;
 let missCount = 0;
 let missList = [];
-
 let currentAnswer = "";
-let timer = 60;
+let timer = 45;
 let timerIntervalId = null;
 let spawnTimeoutId = null;
-
 let isComposing = false;
 
-// -------------------------
-// topic 確認
-// -------------------------
+// 1. Khởi tạo Chủ đề
 const topic = localStorage.getItem("topic") || "";
 topicLabel.textContent = topic || "（未選択）";
 
 if (!topic) {
-  alert("主題が選ばれていません。");
-  location.href = "topic.html";
+    alert("主題が選ばれていません。");
+    location.href = "topic.html";
 }
 
-// 結果画面の「やり直し」から来た場合は、同じ条件で自動スタート
-const retryFlag = localStorage.getItem("retry");
-if (retryFlag === "1") {
-  localStorage.removeItem("retry");
-  // DOMが描画された後に開始
-  setTimeout(() => {
-    startGame();
-  }, 0);
+// 2. Xử lý IME
+inputBox.addEventListener("compositionstart", () => { isComposing = true; });
+inputBox.addEventListener("compositionend", () => { isComposing = false; });
+
+// 3. Chọn chế độ và Cập nhật giao diện nút
+function updateModeUI() {
+    if (!mode) return;
+    localStorage.setItem("mode", mode);
+    hiraBtn.classList.toggle("active", mode === "hira");
+    kataBtn.classList.toggle("active", mode === "kata");
 }
-// IME
-inputBox.addEventListener("compositionstart", () => {
-  isComposing = true;
-});
 
-inputBox.addEventListener("compositionend", () => {
-  isComposing = false;
-});
+hiraBtn.onclick = () => { mode = "hira"; updateModeUI(); };
+kataBtn.onclick = () => { mode = "kata"; updateModeUI(); };
+updateModeUI(); // Chạy ngay để highlight nút nếu đã có mode từ trước (do Yarinaoshi)
 
-// モード選択（前回の選択を復元）
-if (mode === "kata") {
-  kataBtn.classList.add("active");
-  hiraBtn.classList.remove("active");
-} else {
-  hiraBtn.classList.add("active");
-  kataBtn.classList.remove("active");
-}
-hiraBtn.onclick = () => {
-  mode = "hira";
-  localStorage.setItem("mode", mode);
-  hiraBtn.classList.add("active");
-  kataBtn.classList.remove("active");
-};
-
-kataBtn.onclick = () => {
-  mode = "kata";
-  localStorage.setItem("mode", mode);
-  kataBtn.classList.add("active");
-  hiraBtn.classList.remove("active");
-};
-
-// Enter 判定
+// 4. Xử lý nhập liệu
 inputBox.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    if (!isComposing) checkAnswer();
-  }
+    if (e.key === "Enter" && !isComposing) {
+        checkAnswer();
+    }
 });
 
-finishBtn.onclick = finishGame;
+const submitBtn = document.getElementById("submitBtn");
+if (submitBtn) {
+    submitBtn.onclick = () => { checkAnswer(); inputBox.focus(); };
+}
 
-// START
+fallingArea.addEventListener("click", () => { inputBox.focus(); });
+
+if (finishBtn) {
+    finishBtn.onclick = () => {
+        if (confirm("ゲームを終了しますか？")) {
+            finishGame();
+        }
+    };
+}
+
+// 5. Logic Game chính
 async function startGame() {
-  await loadWords();
+    if (!mode) {
+        alert("ひらがな hoặc カタカナ を選択してください！");
+        return;
+    }
+    try {
+        await loadWords();
+        
+        // --- CHỐNG LẶP CHỮ TẠI ĐÂY ---
+        shuffledWords = [...words].sort(() => Math.random() - 0.5);
 
-  mojiScreen.classList.add("hidden");
-  gameScreen.classList.remove("hidden");
+        mojiScreen.classList.add("hidden");
+        gameScreen.classList.remove("hidden");
+        
+        correctCount = 0;
+        missCount = 0;
+        missList = [];
+        correctEl.textContent = "0";
+        missEl.textContent = "0";
+        
+        timer = 45; // Đảm bảo luôn là 45s
+        timeLeftEl.textContent = timer;
 
-  correctCount = 0;
-  missCount = 0;
-  missList = [];
+        fallingArea.innerHTML = "";
+        inputBox.value = "";
+        inputBox.focus();
 
-  correctEl.textContent = "0";
-  missEl.textContent = "0";
-
-  timer = parseInt(durationSelect?.value || "45", 10);
-  timeLeftEl.textContent = timer;
-
-  fallingArea.innerHTML = "";
-  inputBox.value = "";
-  inputBox.focus();
-
-  startTimer();
-  spawnNext();
+        startTimer();
+        spawnNext();
+    } catch (e) {
+        alert("単語リストの読み込みに失敗しました。");
+    }
 }
 
 startBtn.onclick = startGame;
 
-// 単語
 async function loadWords() {
-  const path = `${topic}(${mode}).txt`;
-  const res = await fetch(path, { cache: "no-store" });
-  if (!res.ok) throw new Error();
-  const text = await res.text();
-  words = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const path = `category/${topic}(${mode}).txt`;
+    const res = await fetch(path, { cache: "no-store" });
+    if (!res.ok) throw new Error();
+    const text = await res.text();
+    words = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
 }
 
-function pickWord() {
-  return words[Math.floor(Math.random() * words.length)];
-}
-
-// 判定
 function checkAnswer() {
-  const userInput = inputBox.value.trim();
-  if (!userInput) return;
+    const val = inputBox.value.trim();
+    if (!val) return;
 
-  if (userInput === currentAnswer) {
-    handleCorrect();
-  } else {
-    handleMiss(currentAnswer);
-  }
-
-  inputBox.value = "";
-  inputBox.focus();
+    if (val === currentAnswer) {
+        correctCount++;
+        correctEl.textContent = correctCount;
+    } else {
+        missCount++;
+        missEl.textContent = missCount;
+        missList.push(currentAnswer);
+    }
+    removeCurrentFalling();
+    spawnNext();
+    inputBox.value = "";
+    inputBox.focus();
 }
 
-function handleCorrect() {
-  correctCount++;
-  correctEl.textContent = correctCount;
-
-  removeCurrentFalling();
-  spawnNext();
-}
-
-function handleMiss(word) {
-  missCount++;
-  missEl.textContent = missCount;
-  missList.push(word);
-
-  removeCurrentFalling();
-  spawnNext();
-}
-
-// 落下
 function spawnNext() {
-  clearTimeout(spawnTimeoutId);
-  spawnTimeoutId = setTimeout(spawnNewChar, 1200);
+    clearTimeout(spawnTimeoutId);
+    spawnTimeoutId = setTimeout(spawnNewChar, 1000);
 }
 
 function spawnNewChar() {
-  currentAnswer = pickWord();
+    if (words.length === 0) return;
 
-  const el = document.createElement("div");
-  el.className = "falling-char";
-  el.textContent = currentAnswer;
-
-  el.style.left =
-    Math.random() * Math.max(20, fallingArea.clientWidth - 120) + "px";
-  el.style.top = "-20px";
-
-  fallingArea.appendChild(el);
-
-  let y = -20;
-  const speed = 1.5;
-
-  const moveId = setInterval(() => {
-    y += speed;
-    el.style.top = y + "px";
-
-    if (y > fallingArea.clientHeight) {
-      clearInterval(moveId);
-      el.remove();
-
-      missCount++;
-      missEl.textContent = missCount;
-      missList.push(currentAnswer);
-
-      spawnNext();
+    // --- LOGIC RÚT CHỮ CHỐNG LẶP ---
+    if (shuffledWords.length === 0) {
+        shuffledWords = [...words].sort(() => Math.random() - 0.5);
     }
-  }, 16);
+    currentAnswer = shuffledWords.pop(); 
+    
+    const el = document.createElement("div");
+    el.className = "falling-char";
+    el.textContent = currentAnswer;
+    fallingArea.appendChild(el);
 
-  el.dataset.moveId = moveId;
+    const areaWidth = fallingArea.clientWidth;
+    const wordWidth = el.offsetWidth || 120;
+    const safeLeft = Math.random() * (areaWidth - wordWidth - 20);
+    el.style.left = Math.max(10, safeLeft) + "px";
+    el.style.top = "-50px";
+
+    let y = -50;
+    const moveId = setInterval(() => {
+        y += 3.0; // Tốc độ rơi
+        el.style.top = y + "px";
+        if (y > fallingArea.clientHeight) {
+            clearInterval(moveId);
+            el.remove();
+            missCount++;
+            missEl.textContent = missCount;
+            missList.push(currentAnswer);
+            spawnNext();
+        }
+    }, 16);
+    el.dataset.moveId = moveId;
 }
 
 function removeCurrentFalling() {
-  const el = document.querySelector(".falling-char");
-  if (!el) return;
-  clearInterval(el.dataset.moveId);
-  el.remove();
+    const el = document.querySelector(".falling-char");
+    if (el) {
+        clearInterval(el.dataset.moveId);
+        el.remove();
+    }
 }
 
-// タイマー
 function startTimer() {
-  clearInterval(timerIntervalId);
-  timerIntervalId = setInterval(() => {
-    timer--;
-    timeLeftEl.textContent = timer;
-    if (timer <= 0) finishGame();
-  }, 1000);
+    clearInterval(timerIntervalId);
+    timerIntervalId = setInterval(() => {
+        timer--;
+        timeLeftEl.textContent = timer;
+        if (timer <= 0) finishGame();
+    }, 1000);
 }
 
-// 終了
 function finishGame() {
-  clearInterval(timerIntervalId);
-  clearTimeout(spawnTimeoutId);
+    clearInterval(timerIntervalId);
+    clearTimeout(spawnTimeoutId);
 
-  document.querySelectorAll(".falling-char").forEach(el => {
-    clearInterval(el.dataset.moveId);
-  });
+    localStorage.setItem("correct", correctCount);
+    localStorage.setItem("miss", missCount);
+    localStorage.setItem("missList", JSON.stringify(missList)); 
 
-  localStorage.setItem("correct", correctCount);
-  localStorage.setItem("miss", missCount);
-  localStorage.setItem("missList", JSON.stringify(missList));
+    location.href = "result.html";
+}
 
-  location.href = "result.html";
+if (localStorage.getItem("retry") === "1") {
+    localStorage.removeItem("retry");
+    const savedMode = localStorage.getItem("mode");
+    
+    if (savedMode) {
+        mode = savedMode;
+        updateModeUI();
+
+        // ẨN MÀN HÌNH CHỌN NGAY LẬP TỨC (Không chờ đợi)
+        if (mojiScreen) mojiScreen.classList.add("hidden");
+        
+        // Bắt đầu logic game luôn
+        setTimeout(() => {
+            startGame(); 
+        }, 50); // Chỉ chờ 50ms rất ngắn để đảm bảo dữ liệu words được tải
+    }
 }
