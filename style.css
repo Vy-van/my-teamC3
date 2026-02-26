@@ -49,7 +49,10 @@ body {
     background-repeat: repeat;
     background-position: center;
 }
-
+.logo {
+    width: clamp(150px, 40vw, 320px);
+    height: auto;
+}
 /* ============================= */
 /* CONTAINER */
 /* ============================= */
@@ -73,7 +76,7 @@ body {
 }
 
 .welcome-text {
-    font-size: 52px;
+    font-size: clamp(28px, 6vw, 42px);
     font-weight: bold;
     letter-spacing: 4px;
     margin-top: 5px;
