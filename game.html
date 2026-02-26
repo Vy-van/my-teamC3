@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
   <title>Japanese Typing Game</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -30,22 +30,23 @@
 
     <!-- GAME -->
     <section id="gameScreen" class="screen hidden">
-      <div class="falling-area" id="fallingArea"></div>
+      <div id="gameScreen">
+        <div class="status-area">
+              <div class="status-item">正解: <span id="correct">0</span></div>
+             <div class="status-item">ミス: <span id="miss">0</span></div>
+              <div class="status-item">残り: <span id="timeLeft">45</span>s</div>
+        </div>
 
-      <div class="side-panel">
-        <div class="info-box">
-          <p>正解: <span id="correct">0</span></p>
-          <p>ミス: <span id="miss">0</span></p>
-          <p>残り時間: <span id="timeLeft">30</span>s</p>
-</div>
+    <div id="fallingArea"></div>
 
-        <input id="inputBox" type="text" placeholder="入力" autocomplete="off" />
-        <button id="submitBtn" type="button">OK</button>
-
-        <div style="margin-top:10px;">
-          <button id="finishBtn" type="button">終了</button>
+    <div class="input-area">
+        <input type="text" id="inputBox" placeholder="ここに入力.....">
+        <div class="button-group">
+            <button id="submitBtn" class="btn">OK</button>
+            <button id="finishBtn" class="btn">終了</button>
         </div>
       </div>
+    </div>
     </section>
 
   </div>
